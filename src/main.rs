@@ -5,7 +5,6 @@ use errors::Error;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::{SqliteConnectionManager, rusqlite::params};
 use rand::{Rng, distributions::Alphanumeric};
-use ::rss::Channel;
 use serde::Deserialize;
 use traewelling::{Traewelling, BASE_URL};
 use dotenv::dotenv;
@@ -68,14 +67,23 @@ async fn callback(
     Ok(response)
 }
 
+#[derive(Deserialize)]
+struct RssQuery {
+    pub timezone: Option<String>,
+    #[serde(default)]
+    pub ignore_users: String
+}
+
 async fn rss(
     extract::Path(id): extract::Path<String>,
+    extract::Query(query): extract::Query<RssQuery>,
     extract::State(state): extract::State<State>
 ) -> Result<Response<String>, Error> {
     let connection = state.get_connection()?;
     let token: String = connection.query_row("SELECT token FROM tokens WHERE id = ?", params![id], |row| row.get(0))?;
     let dashboard = state.traewelling.dashboard(&token).await?;
-    let rss = Channel::from(dashboard);
+    let ignore_users = query.ignore_users.split(',').collect::<Vec<&str>>();
+    let rss = dashboard.to_channel(query.timezone.unwrap_or_else(|| "Europe/Berlin".to_string()), ignore_users);
     let mut response = Response::new(rss.to_string());
     response.headers_mut().insert("Content-Type", HeaderValue::from_static("application/xml"));
     Ok(response)

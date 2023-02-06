@@ -11,6 +11,13 @@ Go to the url of your instance (e.g. the public instance): Follow the steps in t
 ## Delete the rss feed
 Just run a `DELETE` HTTP request to the rss url.
 
+## Additional rss query parameters
+| Name         | Value                                                                 | Example                                     |
+| ------------ | --------------------------------------------------------------------- | ------------------------------------------- |
+| timezone     | The timezone of the datetime strings                                  | Europe/Berlin *(this is the default value)* |
+| ignore_users | A comma delimited list of usernames whose check ins should be ignored | adridoesthings,some_other_username          |
+
+
 # Host your own instance
 Just use the docker image published on github or run the binary with `cargo` yourself. You need to create a docker volume to `/database`.
 
